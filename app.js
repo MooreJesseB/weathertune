@@ -85,6 +85,8 @@ app.post('/search', function(req, res) {
   request(wQuery, function(err, response, body) {
     if(!err) {
       var data = JSON.parse(body);
+      res.send(data);
+      return;
       tempData = data;
       helpers.makePlayList(res, data.data.current_condition[0].weatherDesc[0].value, function(query) {
         request(query, function(err, response, body) {
