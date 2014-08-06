@@ -1,0 +1,12 @@
+<%  include partials/header.ejs %>
+
+  <div class='container narrow'>
+    <form class="form-signin" method="post" action="/create" role="form">
+      <h2 class="form-signin-heading">Please sign in</h2><br>
+      <input type="text" class="form-control" placeholder="Username" name="username" required autofocus>
+      <input type="password" class="form-control" placeholder="Password" name="password" required>
+      <button class="btn btn-lrg btn-primary btn-block narrow text-center" type="submit">Sign in</button>
+    </form><br>
+  </div>
+
+<%  include partials/footer.ejs %>

@@ -1,12 +1,14 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Weathertunes</title>
-  </head>
-  <body>
-    <h1>Weather test</h1>
-  <form method="get" action="/get_spotify">
-    <input class="weather" type="submit" value="Get Weather">
-  </form>
-  </body>
-</html>
+<%  include partials/header.ejs %>
+
+  <div class='container narrow'>
+    <p>Create a Spotify playlist based on current local weather conditions - requires Spotify</p>
+    <form method="post" action="login" form-signin" role="form">
+      <h2 class="form-signin-heading">Please sign in</h2><br>
+      <input type="text" class="form-control signin" placeholder="Username" name="username" required autofocus>
+      <input type="password" class="form-control signin" placeholder="Password" name="password" required>
+      <button class="btn btn-lrg btn-primary btn-block narrow text-center signin" type="submit">Sign in</button>
+    </form><br>
+  </div>
+  
+ 
+<%  include partials/footer.ejs %>
