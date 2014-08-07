@@ -4,24 +4,47 @@
 <br>
 <h2 class='mont'>Account history</h2>
 <br><br>
-<ul>
-<% weathers.forEach(function(item) { %>
-  
-    <li>
-    <%= item.createdAt %><br>
-    <%= item.location %><br>
-    <img src="<%= item.icon %>" > <%= item.description + ", " %>  <%= item.temperature + "\xB0"%></li><br>
-    <ul>
-      <% item.tracks.forEach(function(item) { %>
-        <li><img src="<%= item.icon %>"Track: <%= item.trackName %></li>
-        <li>Artist: <%= item.artist %></li>
-        <li>Album: <%= item.album %></li>
-        <li>Artist: <%= item.artist %></li>
-      <% }) %>
-    </ul>
-    <br><br>
-    
-<% }); %>
-</ul>
+<div class="container">
+  <div class="row">
+      <div class="col-lg-4"></div>
+      <div class="col-lg-4">
+        <ul class="list-group">
+        <% weathers.forEach(function(item) { %>
+          
+          <li class="list-group-item"><%= item.createdAt %></li>
+          <li class="list-group-item"><%= item.location %></li>
+          <li class="list-group-item"><img src="<%= item.icon %>" > <%= item.description + ", " %>  <%= item.temperature + "\xB0"%></li>
+          <li class="list-group-item">
+            <div class="panel-group" id="accordion">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+                      Playlist
+                    </a>
+                  </h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse">
+                  <div class="panel-body">
+                    <% item.tracks.forEach(function(item) { %>
+                      <ul class="list-group">
+                        <li class="list-group-item">Name: <%= item.trackName %></li>
+                        <li class="list-group-item"><img src="<%= item.icon %>"Track: <%= item.trackName %></li>
+                        <li class="list-group-item">Artist: <%= item.artist %></li>
+                        <li class="list-group-item">Album: <%= item.album %></li>
+                        <li class="list-group-item">Artist: <%= item.artist %></li>
+                      </ul>
+                    <% }) %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+        </ul> <br><br>           
+      </div>
+    <div class="col_lg-4"></div>
+  </div>
+</div>
 
 <%  include partials/footer.ejs %>

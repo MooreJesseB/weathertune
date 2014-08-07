@@ -59,7 +59,11 @@ app.get('/signup', function(req, res) {
 });
 
 app.get('/home', function(req, res) {
-  res.render('home', {home: 'home'});
+  if (!req.user) {
+    res.redirect('/');
+  } else {
+    res.render('home', {home: 'home'});
+  }
 });
 
 app.get('/logout', function(req, res) {
@@ -70,15 +74,19 @@ app.get('/logout', function(req, res) {
 app.get('/account', function(req, res) {
   var histories = [];
   var index = 0;
-  db.weather.findAll({
-    where: {
-      userId: req.user.id
-    },
-      include: [db.track]
-  })
-  .success(function(weathers) {
-    res.render('account', {weathers: weathers, home: 'home'});
-  });
+  if (!req.user) {
+    res.redirect('/');
+  } else {
+     db.weather.findAll({
+      where: {
+        userId: req.user.id
+      },
+        include: [db.track]
+    })
+    .success(function(weathers) {
+      res.render('account', {weathers: weathers, home: 'home'});
+    });
+  }
 });
 
 app.post('/login', passport.authenticate('local', {
@@ -96,6 +104,8 @@ app.post('/create', function(req, res) {
       res.render('index', {message: success.message, home: 'index'});
     });
 });
+
+var date = new Date(datestring);
 
 app.post('/search', function(req, res) {
   var weatherUrl = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=";
@@ -172,11 +182,19 @@ app.post('/search', function(req, res) {
 });
 
 app.get('/results', function(req, res) {
-  var description = tempData.data.current_condition[0].weatherDesc[0].value,
-    weatherIcon = tempData.data.current_condition[0].weatherIconUrl[0].value;
-  res.render('results', {description: description, weatherIcon: weatherIcon, playList: tempTrackData, home: 'home'});
+  if (!req.user) {
+    res.redirect('/');
+  } else {
+     var description = tempData.data.current_condition[0].weatherDesc[0].value,
+      weatherIcon = tempData.data.current_condition[0].weatherIconUrl[0].value;
+    res.render('results', {description: description, weatherIcon: weatherIcon, playList: tempTrackData, home: 'home'});
+  }
 });
 
-app.listen(3000, function(){
+app.get('*', function(req, res) {
+  res.render('404', {home : 'home'});
+})
+
+app.listen(process.env.PORT || 3000, function(){
   console.log("LISTENING ON PORT 3000")
 });
