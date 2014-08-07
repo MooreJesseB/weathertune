@@ -82,26 +82,50 @@ app.post('/search', function(req, res) {
   var wQuery = weatherUrl + req.body.location + "&format=json&key=" + weatherKey;
   var trackArr = [];
 
+  // console.log(req.user);
+  // res.send(req.user);
+  // return;
+
   request(wQuery, function(err, response, body) {
     if(!err) {
       var data = JSON.parse(body);
-      res.send(data);
-      return;
       tempData = data;
-      helpers.makePlayList(res, data.data.current_condition[0].weatherDesc[0].value, function(query) {
-        request(query, function(err, response, body) {
-          if (!err) {
-           var data = JSON.parse(body);
-            data.tracks.items.forEach(function(track) {
-              trackArr.push(track.uri.split(":")[2]);
+
+      // res.send(data);
+      // return;
+      
+      // make new weather object
+      var newWeather = {};
+      newWeather.location = data.data.request[0].query;
+      newWeather.description = data.data.current_condition[0].weatherDesc[0].value;
+      newWeather.temperature = data.data.current_condition[0].temp_F;
+      newWeather.icon = data.data.current_condition[0].weatherIconUrl[0].value;
+
+      // create new weather db entry
+      db.user.find(req.user.id)
+        .success(function(foundUser) {
+          db.weather.create(newWeather)
+            .success(function(newWeather){
+              foundUser.addWeather(newWeather)
+              .success(function() {
+              });
             });
-            tempTrackData = helpers.scrambleArr(trackArr);
-            res.redirect('/results');
-          } else {
-            console.error("ERROR!", err);
-          }
         });
-      });
+        // make playlist
+        helpers.makePlayList(res, newWeather.description, function(query) {
+          request(query, function(err, response, body) {
+            if (!err) {
+             var data = JSON.parse(body);
+              data.tracks.items.forEach(function(track) {
+                trackArr.push(track.uri.split(":")[2]);
+              });
+              tempTrackData = helpers.scrambleArr(trackArr);
+              res.redirect('/results');
+            } else {
+              console.error("ERROR!", err);
+            }
+          });
+        });
     } else {
       console.error("Error!!!", err);
     }

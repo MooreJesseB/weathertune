@@ -1,7 +1,7 @@
 module.exports = {
   up: function(migration, DataTypes, done) {
     // add altering commands here, calling 'done' when finished
-    migration.createTable('weather',
+    migration.createTable('weathers',
       {id: {
           type: DataTypes.INTEGER,
           primaryKey: true,
@@ -11,8 +11,9 @@ module.exports = {
       updatedAt: DataTypes.DATE,
       location: DataTypes.STRING,
       description: DataTypes.STRING,
-      temperature: DataTypes.INTEGER,
-      icon: DataTypes.STRING
+      temperature: DataTypes.STRING,
+      icon: DataTypes.STRING,
+      userId: DataTypes.INTEGER
     })
     .complete(done);
   },

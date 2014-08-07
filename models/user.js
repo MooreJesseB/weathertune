@@ -19,9 +19,14 @@ module.exports = function (sequelize, DataTypes){
           notEmpty: true
         }
     }
-  }, 
+  },
+
   {
     classMethods: {
+      associate: function(db) {
+        User.hasMany(db.weather);
+    },
+
       encryptPass: function(password) {
         var hash = bcrypt.hashSync(password, salt);
         return hash;
