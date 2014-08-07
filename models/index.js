@@ -24,6 +24,7 @@ Object.keys(db).forEach(function(modelName) {
 })
 
 db.weather.belongsTo(db.user);
+db.track.belongsTo(db.weather);
 
 module.exports = lodash.extend({
   sequelize: sequelize,

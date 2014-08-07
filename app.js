@@ -5,7 +5,8 @@ var bodyParser = require('body-parser'),
   cookieParser = require('cookie-parser'),
   cookieSession = require('cookie-session'),
   flash = require('connect-flash'),
-  express = require('express');
+  express = require('express'),
+  async = require('async'),
   helpers = require('./lib/helpers.js');
 
 var weatherKey = process.env.WORLD_WEATHER_ONLINE_KEY;
@@ -67,13 +68,16 @@ app.get('/logout', function(req, res) {
 })
 
 app.get('/account', function(req, res) {
+  var histories = [];
+  var index = 0;
   db.weather.findAll({
     where: {
       userId: req.user.id
-    }
+    },
+      include: [db.track]
   })
-  .success(function(weather) {
-    res.render('account', {weather: weather, home: 'home'});
+  .success(function(weathers) {
+    res.render('account', {weathers: weathers, home: 'home'});
   });
 });
 
@@ -97,6 +101,9 @@ app.post('/search', function(req, res) {
   var weatherUrl = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=";
   var wQuery = weatherUrl + req.body.location + "&format=json&key=" + weatherKey;
   var trackArr = [];
+  var playlistObj = {};
+  var newWeather = {};
+  var newTrack = {};
 
   // console.log(req.user);
   // res.send(req.user);
@@ -105,13 +112,13 @@ app.post('/search', function(req, res) {
   request(wQuery, function(err, response, body) {
     if(!err) {
       var data = JSON.parse(body);
-      tempData = data;
+      tempData = data,
 
+      // JSON testing
       // res.send(data);
       // return;
       
       // make new weather object
-      var newWeather = {};
       newWeather.location = data.data.request[0].query;
       newWeather.description = data.data.current_condition[0].weatherDesc[0].value;
       newWeather.temperature = data.data.current_condition[0].temp_F;
@@ -123,24 +130,40 @@ app.post('/search', function(req, res) {
           db.weather.create(newWeather)
             .success(function(newWeather){
               foundUser.addWeather(newWeather)
-              .success(function() {
+              .success(function(weather) {
+
+                // make playlist
+                helpers.makePlayList(res, newWeather.description, function(query) {
+                  request(query, function(err, response, body) {
+                    if (!err) {
+                     var data = JSON.parse(body);
+
+                      // make new track entries in db
+                      data.tracks.items.forEach(function(track) {
+                        newTrack.trackName = track.name;
+                        newTrack.artist = track.artists[0].name;
+                        newTrack.album = track.album.name;
+                        newTrack.icon = track.album.images[2].url;
+                        newTrack.trackId = track.uri.split(":")[2];
+
+                        db.track.create(newTrack)
+                          .success(function(track) {
+                            newWeather.addTrack(track);
+                          });
+
+                        // this is for the playbutton on the rendered page
+                        trackArr.push(track.uri.split(":")[2]);
+                      });
+                      tempTrackData = helpers.scrambleArr(trackArr).join(',');
+                      res.redirect('/results');
+
+                    } else {
+                      console.error("ERROR!", err);
+                    }
+                  });
+                });
               });
             });
-        });
-        // make playlist
-        helpers.makePlayList(res, newWeather.description, function(query) {
-          request(query, function(err, response, body) {
-            if (!err) {
-             var data = JSON.parse(body);
-              data.tracks.items.forEach(function(track) {
-                trackArr.push(track.uri.split(":")[2]);
-              });
-              tempTrackData = helpers.scrambleArr(trackArr);
-              res.redirect('/results');
-            } else {
-              console.error("ERROR!", err);
-            }
-          });
         });
     } else {
       console.error("Error!!!", err);
@@ -150,10 +173,8 @@ app.post('/search', function(req, res) {
 
 app.get('/results', function(req, res) {
   var description = tempData.data.current_condition[0].weatherDesc[0].value,
-    weatherIcon = tempData.data.current_condition[0].weatherIconUrl[0].value,
-    playList = tempTrackData.join(",");
-    console.log(playList);
-  res.render('results', {description: description, weatherIcon: weatherIcon, playList: playList, home: 'home'});
+    weatherIcon = tempData.data.current_condition[0].weatherIconUrl[0].value;
+  res.render('results', {description: description, weatherIcon: weatherIcon, playList: tempTrackData, home: 'home'});
 });
 
 app.listen(3000, function(){

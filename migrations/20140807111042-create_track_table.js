@@ -1,7 +1,7 @@
 module.exports = {
   up: function(migration, DataTypes, done) {
     // add altering commands here, calling 'done' when finished
-  migration.createTable('playlists',
+    migration.createTable('tracks',
     {id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -9,14 +9,18 @@ module.exports = {
     },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
-    tracks: DataTypes.TEXT,
+    trackName: DataTypes.STRING,
+    artist: DataTypes.STRING,
+    album: DataTypes.STRING,
+    trackId: DataTypes.STRING,
+    icon: DataTypes.STRING,
     weatherId: DataTypes.INTEGER
     })
     .complete(done);
   },
   down: function(migration, DataTypes, done) {
     // add reverting commands here, calling 'done' when finished
-    migration.dropTable('playlists')
+    migration.dropTable('tracks')
       .complete(done);
   }
 }

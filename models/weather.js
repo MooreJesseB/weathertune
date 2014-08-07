@@ -8,6 +8,14 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER,
             foreignKey: true
     }
-  });
+  },
+    {
+      classMethods: {
+        associate: function(db) {
+          Weather.hasMany(db.track);
+        }
+      }
+    }
+  );
   return Weather;
 };

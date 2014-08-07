@@ -5,13 +5,20 @@
 <h2 class='mont'>Account history</h2>
 <br><br>
 <ul>
-<% weather.forEach(function(item) { %>
+<% weathers.forEach(function(item) { %>
   
     <li>
     <%= item.createdAt %><br>
     <%= item.location %><br>
     <img src="<%= item.icon %>" > <%= item.description + ", " %>  <%= item.temperature + "\xB0"%></li><br>
-    <a href="#">Playlist</a>
+    <ul>
+      <% item.tracks.forEach(function(item) { %>
+        <li><img src="<%= item.icon %>"Track: <%= item.trackName %></li>
+        <li>Artist: <%= item.artist %></li>
+        <li>Album: <%= item.album %></li>
+        <li>Artist: <%= item.artist %></li>
+      <% }) %>
+    </ul>
     <br><br>
     
 <% }); %>
