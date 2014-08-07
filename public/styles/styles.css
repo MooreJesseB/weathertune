@@ -8,18 +8,17 @@ body {
   padding-top: 100px;
 }
 
-h1 {
-  color: #A8A8A8;
-  font-weight: 50;
-}
-
-h2 {
+.mont {
     text-align: center;
     text-transform: uppercase;
-    font-size: 24px;
     font-weight: 100;
     letter-spacing: 5px;
     font-family: 'Montserrat', 'Helvetica Neue', "Arial", sans-serif;
+}
+
+h1 {
+  font-size: 50px;
+  color: #A8A8A8;
 }
 
 .signin {

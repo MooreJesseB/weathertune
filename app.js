@@ -61,6 +61,22 @@ app.get('/home', function(req, res) {
   res.render('home', {home: 'home'});
 });
 
+app.get('/logout', function(req, res) {
+  req.logout();
+  res.redirect('/');
+})
+
+app.get('/account', function(req, res) {
+  db.weather.findAll({
+    where: {
+      userId: req.user.id
+    }
+  })
+  .success(function(weather) {
+    res.render('account', {weather: weather, home: 'home'});
+  });
+});
+
 app.post('/login', passport.authenticate('local', {
   successRedirect: '/home',
   failureRedirect: '/index',
