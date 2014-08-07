@@ -105,8 +105,6 @@ app.post('/create', function(req, res) {
     });
 });
 
-var date = new Date(datestring);
-
 app.post('/search', function(req, res) {
   var weatherUrl = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=";
   var wQuery = weatherUrl + req.body.location + "&format=json&key=" + weatherKey;
