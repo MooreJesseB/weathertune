@@ -3,19 +3,23 @@
 <br><br><br><br>
 <img class="icon" src="<%=weatherIcon%>"><br><br>
 <h2 class="mont"><%= description %></h2><br><br>
+<% if (playList.length === 0) { %>
+  <h5 class="mont">Sorry, no tracks match this weather</h5><br><br>
+<% } %>
 <iframe src="https://embed.spotify.com/?uri=spotify:trackset:Weathertune:<%= playList %>" frameborder="0" allowtransparency="true"></iframe>
 
-
-<div class="inner cover">
-  <% for(var i = 0; i < 7; i++) { %>
-    <img src="<%= thumbnails[i] %>">
-  <% }; %>
-</div>
-<div class="inner cover">
-  <% for(var i = 7; i < thumbnails.length; i++) { %>
-    <img src="<%= thumbnails[i] %>">
-  <% }; %>
-</div>
+<% if (playList.length > 0) { %>
+  <div class="inner cover">
+    <% for(var i = 0; i < 7; i++) { %>
+      <img src="<%= thumbnails[i] %>">
+    <% }; %>
+  </div>
+  <div class="inner cover">
+    <% for(var i = 7; i < thumbnails.length; i++) { %>
+      <img src="<%= thumbnails[i] %>">
+    <% }; %>
+  </div>
+<% } %>
 <br>
 <br>
 <br>

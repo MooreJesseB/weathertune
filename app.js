@@ -75,8 +75,8 @@ app.get('/logout', function(req, res) {
   res.redirect('/');
 })
 
-app.get('/fail', function(req, res) {
-  res.render('fail', {home: 'home'});
+app.get('/locationfail', function(req, res) {
+  res.render('locationfail', {home: 'home'});
 });
 
 app.get('/account', function(req, res) {
@@ -92,6 +92,7 @@ app.get('/account', function(req, res) {
         include: [db.track]
     })
     .success(function(weathers) {
+      weathers.reverse();
       res.render('account', {weathers: weathers, home: 'home'});
     });
   }
@@ -191,7 +192,7 @@ app.post('/search', function(req, res) {
               });
           });
       } else {
-        res.redirect('/fail');
+        res.redirect('/locationfail');
       }
     } else {
       console.error("Error!!!", err);
