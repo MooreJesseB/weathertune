@@ -4,7 +4,9 @@
 <img class="icon" src="<%=weatherIcon%>"><br><br>
 <h2 class="mont"><%= description %></h2><br><br>
 <% if (playList.length === 0) { %>
-  <h5 class="mont">Sorry, no tracks match this weather</h5><br><br>
+  <h5 class="mont">Sorry, no tracks match this weather</h5><br>
+  <h5 class="mont"><a href="/home">Back</a></h5>
+  <br>
 <% } %>
 <iframe src="https://embed.spotify.com/?uri=spotify:trackset:Weathertune:<%= playList %>" frameborder="0" allowtransparency="true"></iframe>
 
