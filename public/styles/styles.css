@@ -40,3 +40,7 @@ h1 {
 .supertiny {
   font-size: 12;
 }
+
+.nobullet {
+  list-style: none;
+}
