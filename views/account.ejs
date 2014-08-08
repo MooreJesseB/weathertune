@@ -11,16 +11,16 @@
         <ul class="list-group">
         <% weathers.forEach(function(item) { %>
           
-          <li class="list-group-item"><%= item.createdAt %></li>
-          <li class="list-group-item"><%= item.location %></li>
-          <li class="list-group-item"><img src="<%= item.icon %>" > <%= item.description + ", " %>  <%= item.temperature + "\xB0"%></li>
+          <li class="signin text-left list-group-item"><%= item.createdAt %></li>
+          <li class="signin text-left list-group-item"><%= item.location %></li>
+          <li class="signin text-left  list-group-item"><img src="<%= item.icon %>" > <%= item.description + ", " %>  <%= item.temperature + "\xB0"%></li>
           <li class="list-group-item">
             <div class="panel-group" id="accordion">
               <div class="panel panel-default">
                 <div class="panel-heading">
                   <h4 class="panel-title">
                     <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-                      Playlist
+                      <li class="signin">Playlist</li>
                     </a>
                   </h4>
                 </div>
@@ -28,11 +28,11 @@
                   <div class="panel-body">
                     <% item.tracks.forEach(function(item) { %>
                       <ul class="list-group">
-                        <li class="list-group-item">Name: <%= item.trackName %></li>
-                        <li class="list-group-item"><img src="<%= item.icon %>"Track: <%= item.trackName %></li>
-                        <li class="list-group-item">Artist: <%= item.artist %></li>
-                        <li class="list-group-item">Album: <%= item.album %></li>
-                        <li class="list-group-item">Artist: <%= item.artist %></li>
+                        <li class="signin text-left list-group-item">Name: <%= item.trackName %></li>
+                        <li class="signin text-left list-group-item"><img src="<%= item.icon %>"Track: <%= item.trackName %></li>
+                        <li class="signin text-left list-group-item">Artist: <%= item.artist %></li>
+                        <li class="signin text-left list-group-item">Album: <%= item.album %></li>
+                        <li class="signin text-left list-group-item">Artist: <%= item.artist %></li>
                       </ul>
                     <% }) %>
                   </div>
