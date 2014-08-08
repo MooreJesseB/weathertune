@@ -75,6 +75,10 @@ app.get('/logout', function(req, res) {
   res.redirect('/');
 })
 
+app.get('/fail', function(req, res) {
+  res.render('fail', {home: 'home'});
+});
+
 app.get('/account', function(req, res) {
   var histories = [];
   var index = 0;
@@ -125,65 +129,70 @@ app.post('/search', function(req, res) {
   request(wQuery, function(err, response, body) {
     if(!err) {
       var data = JSON.parse(body);
-      tempData = data,
+      tempData = data;
 
       // JSON testing
       // res.send(data);
       // return;
       
-      // make new weather object
-      newWeather.location = data.data.request[0].query;
-      newWeather.description = data.data.current_condition[0].weatherDesc[0].value;
-      newWeather.temperature = data.data.current_condition[0].temp_F;
-      newWeather.icon = data.data.current_condition[0].weatherIconUrl[0].value;
+      if (!data.data.error) {
+        
+        // make new weather object
+        newWeather.location = data.data.request[0].query;
+        newWeather.description = data.data.current_condition[0].weatherDesc[0].value;
+        newWeather.temperature = data.data.current_condition[0].temp_F;
+        newWeather.icon = data.data.current_condition[0].weatherIconUrl[0].value;
 
-      // create new weather db entry
-      db.user.find(req.user.id)
-        .success(function(foundUser) {
-          db.weather.create(newWeather)
-            .success(function(newWeather){
-              foundUser.addWeather(newWeather)
-              .success(function(weather) {
-                currentWeather = weather;
+        // create new weather db entry
+        db.user.find(req.user.id)
+          .success(function(foundUser) {
+            db.weather.create(newWeather)
+              .success(function(newWeather){
+                foundUser.addWeather(newWeather)
+                .success(function(weather) {
+                  currentWeather = weather;
 
-                // make playlist
-                helpers.makePlayList(res, newWeather.description, function(query) {
-                  request(query, function(err, response, body) {
-                    if (!err) {
-                     var data = JSON.parse(body);
+                  // make playlist
+                  helpers.makePlayList(res, newWeather.description, function(query) {
+                    request(query, function(err, response, body) {
+                      if (!err) {
+                       var data = JSON.parse(body);
 
-                      // make new track entries in db
-                      data.tracks.items.forEach(function(track) {
-                        newTrack.trackName = track.name;
-                        newTrack.artist = track.artists[0].name;
-                        newTrack.album = track.album.name;
-                        newTrack.icon = track.album.images[2].url;
-                        newTrack.trackId = track.uri.split(":")[2];
+                        // make new track entries in db
+                        data.tracks.items.forEach(function(track) {
+                          newTrack.trackName = track.name;
+                          newTrack.artist = track.artists[0].name;
+                          newTrack.album = track.album.name;
+                          newTrack.icon = track.album.images[2].url;
+                          newTrack.trackId = track.uri.split(":")[2];
 
-                        db.track.create(newTrack)
-                          .success(function(track) {
-                            newWeather.addTrack(track);
-                            // this is hackey... I know
-                            if (imgArr.length < 14) {
-                              imgArr.push(track.icon);
-                            }
-                          });
+                          db.track.create(newTrack)
+                            .success(function(track) {
+                              newWeather.addTrack(track);
+                              // this is hackey... I know
+                              if (imgArr.length < 14) {
+                                imgArr.push(track.icon);
+                              }
+                            });
 
-                        // this is for the playbutton on the rendered page
-                        trackArr.push(track.uri.split(":")[2]);
-                      });
-                      tempImgData = imgArr;
-                      tempTrackData = helpers.scrambleArr(trackArr, 16).join(',');
-                      res.redirect('/results');
+                          // this is for the playbutton on the rendered page
+                          trackArr.push(track.uri.split(":")[2]);
+                        });
+                        tempImgData = imgArr;
+                        tempTrackData = helpers.scrambleArr(trackArr, 16).join(',');
+                        res.redirect('/results');
 
-                    } else {
-                      console.error("ERROR!", err);
-                    }
+                      } else {
+                        console.error("ERROR!", err);
+                      }
+                    });
                   });
                 });
               });
-            });
-        });
+          });
+      } else {
+        res.redirect('/fail');
+      }
     } else {
       console.error("Error!!!", err);
     }
