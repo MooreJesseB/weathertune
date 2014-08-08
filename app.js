@@ -92,6 +92,9 @@ app.get('/account', function(req, res) {
         include: [db.track]
     })
     .success(function(weathers) {
+      weathers.sort(function(a, b) {
+        return a.createdAt.getTime() - b.createdAt.getTime();
+      })
       weathers.reverse();
       res.render('account', {weathers: weathers, home: 'home'});
     });
