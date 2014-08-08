@@ -2,7 +2,29 @@
 
 <br><br><br><br>
 <img class="icon" src="<%=weatherIcon%>"><br><br>
-<h2><%= description %></h2><br><br>
+<h2 class="mont"><%= description %></h2><br><br>
 <iframe src="https://embed.spotify.com/?uri=spotify:trackset:Weathertune:<%= playList %>" frameborder="0" allowtransparency="true"></iframe>
+
+
+<div class="inner cover">
+  <% for(var i = 0; i < 7; i++) { %>
+    <img src="<%= thumbnails[i] %>">
+  <% }; %>
+</div>
+<div class="inner cover">
+  <% for(var i = 7; i < thumbnails.length; i++) { %>
+    <img src="<%= thumbnails[i] %>">
+  <% }; %>
+</div>
+<br>
+<br>
+<br>
+<br>
+<div class="container">
+  <h3 class="text-left navtext"><%= weather.location + "     " + weather.temperature + "\xB0" %></h3>
+</div>
+<br>
+
+
 
 <%  include partials/footer.ejs %>

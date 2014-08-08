@@ -1,7 +1,7 @@
 var bcrypt = require("bcrypt");
 var passport = require("passport");
 var passportLocal = require("passport-local");
-var salt = bcrypt.genSaltSync(10);
+var salt = bcrypt.genSaltSync(Number(process.env.WEATHERTUNE_SALT));
 
 module.exports = function (sequelize, DataTypes){
    var User = sequelize.define('user', {

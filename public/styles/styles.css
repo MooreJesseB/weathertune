@@ -32,3 +32,11 @@ h1 {
 .no_bold {
   font-weight: 10;
 }
+
+.bigbutton {
+  background-image: none;
+}
+
+.supertiny {
+  font-size: 12;
+}

@@ -1,3 +1,5 @@
+console.log(process.env.WEATHERTUNE_COOKIE_SESSION_SECRET)
+
 var bodyParser = require('body-parser'),
   request = require('request'),
   passport = require('passport'),
@@ -16,6 +18,8 @@ var db = require('./models/index');
 
 var tempData = {};
 var tempTrackData = [];
+var tempImgData = [];
+var currentWeather = {};
 
 app.use(express.static(__dirname + '/public'));
 
@@ -23,9 +27,9 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true})); 
 
 app.use(cookieSession({
-  secret: 'superdupersecret',
+  secret: process.env.WEATHERTUNE_COOKIE_SESSION_SECRET,
   name: 'cookie created by vergo',
-  maxage: 360000
+  maxage: 500000
 }));
 
 app.use(passport.initialize());
@@ -109,6 +113,7 @@ app.post('/search', function(req, res) {
   var weatherUrl = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=";
   var wQuery = weatherUrl + req.body.location + "&format=json&key=" + weatherKey;
   var trackArr = [];
+  var imgArr = [];
   var playlistObj = {};
   var newWeather = {};
   var newTrack = {};
@@ -139,6 +144,7 @@ app.post('/search', function(req, res) {
             .success(function(newWeather){
               foundUser.addWeather(newWeather)
               .success(function(weather) {
+                currentWeather = weather;
 
                 // make playlist
                 helpers.makePlayList(res, newWeather.description, function(query) {
@@ -157,12 +163,17 @@ app.post('/search', function(req, res) {
                         db.track.create(newTrack)
                           .success(function(track) {
                             newWeather.addTrack(track);
+                            // this is hackey... I know
+                            if (imgArr.length < 14) {
+                              imgArr.push(track.icon);
+                            }
                           });
 
                         // this is for the playbutton on the rendered page
                         trackArr.push(track.uri.split(":")[2]);
                       });
-                      tempTrackData = helpers.scrambleArr(trackArr).join(',');
+                      tempImgData = imgArr;
+                      tempTrackData = helpers.scrambleArr(trackArr, 16).join(',');
                       res.redirect('/results');
 
                     } else {
@@ -183,9 +194,17 @@ app.get('/results', function(req, res) {
   if (!req.user) {
     res.redirect('/');
   } else {
-     var description = tempData.data.current_condition[0].weatherDesc[0].value,
+
+    var description = tempData.data.current_condition[0].weatherDesc[0].value,
       weatherIcon = tempData.data.current_condition[0].weatherIconUrl[0].value;
-    res.render('results', {description: description, weatherIcon: weatherIcon, playList: tempTrackData, home: 'home'});
+
+    res.render('results', 
+      {description: description
+        , weatherIcon: weatherIcon
+        , playList: tempTrackData
+        , thumbnails: tempImgData
+        , weather: currentWeather
+        , home: 'home'});
   }
 });
 
