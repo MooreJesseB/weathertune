@@ -4,7 +4,7 @@
 #Overview#
 ---
 
-**Weathertune checks the current weather of a particular location and then generates a Spofify playlist based on the results.
+Weathertune checks the current weather of a particular location and then generates a Spofify playlist based on the results.
 
 
 ##Motivation##
