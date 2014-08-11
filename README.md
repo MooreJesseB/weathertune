@@ -1,8 +1,7 @@
 #weathertune#
-===========
 
-#Overview#
----
+##Overview##
+
 
 Weathertune checks the current weather of a particular location and then generates a Spofify playlist based on the results.
 
@@ -28,5 +27,5 @@ Spotify API
 ###Note:###
 If you wish to clone this repository you will need to get a unique API key from [World Weather Online](http://www.worldweatheronline.com/ "Title")
 
-##Find it here:##
-###[weathertune](http://weathertune.herokuapp.com/ "Title")###
+###Find it here:###
+####[weathertune](http://weathertune.herokuapp.com/ "Title")####
