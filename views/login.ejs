@@ -1,0 +1,7 @@
+<form id="authForm" method="post" action="/login" role="form">
+  <input type="hidden" name="username" value="<%= username %>">
+  <input type="hidden" name="password" value="<%= password %>">
+</form>
+<script>
+  document.forms["authForm"].submit(); 
+</script>

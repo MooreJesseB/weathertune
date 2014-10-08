@@ -1,4 +1,4 @@
-console.log(process.env.WEATHERTUNE_COOKIE_SESSION_SECRET)
+
 
 var bodyParser = require('body-parser'),
   request = require('request'),
@@ -40,7 +40,7 @@ app.use(flash());
 passport.serializeUser(function(user, done) {
   console.log('SERIALIZED JUST RAN');
   done(null, user.id);
-})
+});
 
 passport.deserializeUser(function(id, done) {
   console.log('DESERIALIZED JUST RAN');
@@ -58,6 +58,24 @@ app.get('/', function(req, res) {
   res.render('index', {home: 'index'});
 });
 
+app.get('/about', function(req, res) {
+  if (!req.user) {
+    home = 'index';
+  } else {
+    home = 'home';
+  }
+  res.render('about', {home: home, about: true});
+});
+
+app.get('/contact', function(req, res) {
+  if (!req.user) {
+    home = 'index';
+  } else {
+    home = 'home';
+  }
+  res.render('contact', {home: home, contact: true});
+});
+
 app.get('/signup', function(req, res) {
   res.render('signup', {home: 'signup'});
 });
@@ -73,7 +91,7 @@ app.get('/home', function(req, res) {
 app.get('/logout', function(req, res) {
   req.logout();
   res.redirect('/');
-})
+});
 
 app.get('/locationfail', function(req, res) {
   res.render('locationfail', {home: 'home'});
@@ -94,7 +112,7 @@ app.get('/account', function(req, res) {
     .success(function(weathers) {
       weathers.sort(function(a, b) {
         return a.createdAt.getTime() - b.createdAt.getTime();
-      })
+      });
       weathers.reverse();
       res.render('account', {weathers: weathers, home: 'home'});
     });
@@ -103,18 +121,25 @@ app.get('/account', function(req, res) {
 
 app.post('/login', passport.authenticate('local', {
   successRedirect: '/home',
-  failureRedirect: '/index',
+  failureRedirect: '/',
   failureFlash: true
 }));
 
 app.post('/create', function(req, res) {
   db.user.createNewUser(req.body.username, req.body.password, 
     function(err) {
-      res.render("signup", {message: err.message, username: req.body.username, home:'signup'})
+      console.log("Signup failure");
+      res.render("signup", {message: err.message, username: req.body.username, home:'signup'});
     },
     function(success) {
-      res.render('index', {message: success.message, home: 'index'});
-    });
+      console.log(success);
+      
+      res.render('login', {username: req.body.username, 
+                            password: req.body.password, 
+                            message: success.message, 
+                            home: 'index'});
+    }
+  );
 });
 
 app.post('/search', function(req, res) {
@@ -212,19 +237,19 @@ app.get('/results', function(req, res) {
       weatherIcon = tempData.data.current_condition[0].weatherIconUrl[0].value;
 
     res.render('results', 
-      {description: description
-        , weatherIcon: weatherIcon
-        , playList: tempTrackData
-        , thumbnails: tempImgData
-        , weather: currentWeather
-        , home: 'home'});
+      {description: description, 
+        weatherIcon: weatherIcon,
+        playList: tempTrackData,
+        thumbnails: tempImgData,
+        weather: currentWeather,
+        home: 'home'});
   }
 });
 
 app.get('*', function(req, res) {
   res.render('404', {home : 'home'});
-})
+});
 
 app.listen(process.env.PORT || 3000, function(){
-  console.log("LISTENING ON PORT 3000")
+  console.log("LISTENING ON PORT 3000");
 });
