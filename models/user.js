@@ -37,7 +37,7 @@ module.exports = function (sequelize, DataTypes){
     },
       createNewUser:function(username, password, err, success ) {
         if(password.length < 6) {
-          err({message: "Password should be more than six characters"});
+          err({message: "Password must be more than six characters"});
         }
         else{
         User.create({
@@ -46,13 +46,16 @@ module.exports = function (sequelize, DataTypes){
           }).error(function(error) {
             console.log(error);
             if(error.username){
-              err({message: 'Your username should be at least 6 characters long', username: username});
+              console.log("Username too short");
+              err({message: 'Username must be at least 6 characters long', username: username});
             }
             else{
+              console.log("Username already exists");
               err({message: 'An account with that username already exists', username: username});
               }
           }).success(function(user) {
-            success({message: 'Account created, please log in now'});
+            console.log("Account Created");
+            success({message: 'Account successfully created!', user: user});
           });
         }
       },  
@@ -79,15 +82,12 @@ module.exports = function (sequelize, DataTypes){
         .done(function(error,user){
           if(error){
             console.log(error);
-            return done (err, req.flash('loginMessage', 'Oops! Something went wrong.'));
+            return done (err, req.flash('failure', 'Oops! Something went wrong.'));
           }
-          if (user === null){
-            return done (null, false, req.flash('loginMessage', 'Username does not exist.'));
+          if (user === null || !User.comparePass(password, user.password)){
+            return done (null, false, req.flash('failure', 'Username/Password combination not valid'));
           }
-          if ((User.comparePass(password, user.password)) !== true){
-            return done (null, false, req.flash('loginMessage', 'Invalid Password'));
-          }
-          done(null, user); 
+          done(null, user, req.flash('success', 'Welcome to Weathertune ' + username + "!")); 
         });
     }));
       

@@ -4,8 +4,14 @@
 <br>
   <p class="lead navtext">Create a music playlist based on current local weather conditions</p>
   <p><span class="supertiny navtext">- requires Spotify</span></p><br>
+  <% if (sessionFlash && sessionFlash.failure) { %>
+    <div class="col-xs-3"></div>
+    <% sessionFlash.failure.forEach(function(message) { %>
+      <div class="col-xs-6 alert alert-danger text-center col-xs" role="alert"><%= message %></div>
+    <% }); %>
+  <% } %>
   <div class='container narrow'>
-    
+
     <form method="post" action="login" role="form">
       <h5 class="signin">Please sign in</h5><br>  
       <input type="text" class="form-control signin" placeholder="Username" name="username" required autofocus>

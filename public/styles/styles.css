@@ -3,6 +3,11 @@
   padding: 15px;
 }
 
+.midsize {
+  max-width: 600px;
+  padding: 15px;
+}
+
 body {
   font-family: 'Arial', sans-serif;
   padding-top: 100px;

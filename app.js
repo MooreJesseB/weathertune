@@ -6,20 +6,22 @@ var bodyParser = require('body-parser'),
   passportLocal = require('passport-local'),
   cookieParser = require('cookie-parser'),
   cookieSession = require('cookie-session'),
-  flash = require('connect-flash'),
+  flash = require('express-flash'),
   express = require('express'),
   async = require('async'),
-  helpers = require('./lib/helpers.js');
+  moment = require('moment'),
+  Playlist = require('./lib/Playlist'),
+  Spotify = require('./lib/Spotify'),
+  Weather = require('./lib/Weather'),
+  async = require('async');
+  
+var CurrentPlaylist = new Playlist();
+var CurrentWeather = new Weather();
 
-var weatherKey = process.env.WORLD_WEATHER_ONLINE_KEY;
+// var weatherKey = process.env.WORLD_WEATHER_ONLINE_KEY;
 
 var app = express();
 var db = require('./models/index');
-
-var tempData = {};
-var tempTrackData = [];
-var tempImgData = [];
-var currentWeather = {};
 
 app.use(express.static(__dirname + '/public'));
 
@@ -28,7 +30,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(cookieSession({
   secret: process.env.WEATHERTUNE_COOKIE_SESSION_SECRET,
-  name: 'cookie created by vergo',
+  name: 'cookie created by vergobret',
   maxage: 500000
 }));
 
@@ -36,14 +38,20 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+app.use(function(req, res, next) {
+  res.locals.sessionFlash = req.session.flash;
+  delete req.session.sessionFlash;
+  next();
+});
+
 // prepare our serialize funcitons
 passport.serializeUser(function(user, done) {
-  console.log('SERIALIZED JUST RAN');
+  console.log('SERIALIZE JUST RAN');
   done(null, user.id);
 });
 
 passport.deserializeUser(function(id, done) {
-  console.log('DESERIALIZED JUST RAN');
+  console.log('DESERIALIZE JUST RAN');
   db.user.find({
     where: {
       id: id
@@ -54,9 +62,11 @@ passport.deserializeUser(function(id, done) {
   });
 });
 
+// API
 app.get('/', function(req, res) {
-  res.render('index', {home: 'index'});
+  res.render('index', {home: 'index', sessionFlash: res.locals.sessionFlash});
 });
+
 
 app.get('/about', function(req, res) {
   if (!req.user) {
@@ -67,6 +77,7 @@ app.get('/about', function(req, res) {
   res.render('about', {home: home, about: true});
 });
 
+
 app.get('/contact', function(req, res) {
   if (!req.user) {
     home = 'index';
@@ -76,9 +87,11 @@ app.get('/contact', function(req, res) {
   res.render('contact', {home: home, contact: true});
 });
 
+
 app.get('/signup', function(req, res) {
-  res.render('signup', {home: 'signup'});
+  res.render('signup', {home: 'signup', sessionFlash: res.locals.sessionFlash});
 });
+
 
 app.get('/home', function(req, res) {
   if (!req.user) {
@@ -88,10 +101,12 @@ app.get('/home', function(req, res) {
   }
 });
 
+
 app.get('/logout', function(req, res) {
   req.logout();
   res.redirect('/');
 });
+
 
 app.get('/locationfail', function(req, res) {
   res.render('locationfail', {home: 'home'});
@@ -103,152 +118,129 @@ app.get('/account', function(req, res) {
   if (!req.user) {
     res.redirect('/');
   } else {
-     db.weather.findAll({
-      where: {
-        userId: req.user.id
-      },
-        include: [db.track]
-    })
+     db.weather.findAll({where: {userId: req.user.id}, include: [db.track], order: [['createdAt', 'DESC']]})
     .success(function(weathers) {
-      weathers.sort(function(a, b) {
-        return a.createdAt.getTime() - b.createdAt.getTime();
+      var weathersFormatted = weathers.map(function(item) {
+        var newItem = item;
+        console.log("MOMENT", moment(item.createdAt).format('MMMM Do YYYY, h:mm:ss a'));
+        newItem.createdAt = moment(item.createdAt).format('MMMM Do YYYY, h:mm:ss a');
+        console.log('NEW ITEM', newItem.createdAt);
+        return newItem;
       });
-      weathers.reverse();
-      res.render('account', {weathers: weathers, home: 'home'});
+      res.render('account', {weathers: weathersFormatted, home: 'home'});
     });
   }
 });
 
+
 app.post('/login', passport.authenticate('local', {
   successRedirect: '/home',
   failureRedirect: '/',
-  failureFlash: true
+  failureFlash: true,
 }));
+
 
 app.post('/create', function(req, res) {
   db.user.createNewUser(req.body.username, req.body.password, 
     function(err) {
       console.log("Signup failure");
+      req.flash('failure', err.message);
       res.render("signup", {message: err.message, username: req.body.username, home:'signup'});
     },
     function(success) {
-      console.log(success);
-      
-      res.render('login', {username: req.body.username, 
-                            password: req.body.password, 
-                            message: success.message, 
-                            home: 'index'});
-    }
-  );
+      req.login(success.user, function(err) {
+        req.flash('success', success.message);
+        res.redirect('/home');
+      });
+    });
 });
 
+
 app.post('/search', function(req, res) {
-  var weatherUrl = "http://api.worldweatheronline.com/free/v1/weather.ashx?q=";
-  var wQuery = weatherUrl + req.body.location + "&format=json&key=" + weatherKey;
   var trackArr = [];
   var imgArr = [];
   var playlistObj = {};
   var newWeather = {};
   var newTrack = {};
+  var spotifyQueries;
+  var spotify = new Spotify();
 
-  // console.log(req.user);
-  // res.send(req.user);
-  // return;
-
-  request(wQuery, function(err, response, body) {
-    if(!err) {
+  CurrentWeather.startNewQuery(req.body.location, function(err, reponse, body) {
+    if (err) {
+      console.error("Error in request/response to WWO API call!!!", err);
+    } else {
       var data = JSON.parse(body);
-      tempData = data;
 
-      // JSON testing
-      // res.send(data);
-      // return;
-      
-      if (!data.data.error) {
-        
-        // make new weather object
-        newWeather.location = data.data.request[0].query;
-        newWeather.description = data.data.current_condition[0].weatherDesc[0].value;
-        newWeather.temperature = data.data.current_condition[0].temp_F;
-        newWeather.icon = data.data.current_condition[0].weatherIconUrl[0].value;
+      if (data.data.error) {
+        console.log("Error in weather reponse data", data.data.error);
+        res.redirect('/locationfail');
+      } else {
 
-        // create new weather db entry
-        db.user.find(req.user.id)
-          .success(function(foundUser) {
-            db.weather.create(newWeather)
-              .success(function(newWeather){
-                foundUser.addWeather(newWeather)
-                .success(function(weather) {
-                  currentWeather = weather;
+        CurrentWeather.location = data.data.request[0].query;
+        CurrentWeather.query = data.data.request[0].query;
+        CurrentWeather.description = data.data.current_condition[0].weatherDesc[0].value;
+        CurrentWeather.temperature = data.data.current_condition[0].temp_F;
+        CurrentWeather.icon = data.data.current_condition[0].weatherIconUrl[0].value;
 
-                  // make playlist
-                  helpers.makePlayList(res, newWeather.description, function(query) {
-                    request(query, function(err, response, body) {
-                      if (!err) {
-                       var data = JSON.parse(body);
+        // Add new weather to DB
+        db.user.find(req.user.id).success(function(foundUser) {
+          db.weather.create(CurrentWeather).success(function(newWeather) {
+              foundUser.addWeather(newWeather).success(function(newWeather) {
+                spotifyQueries = CurrentWeather.parseWeatherType();
+                spotify.massSpotifyQueries(spotifyQueries, function(tracks) {
 
-                        // make new track entries in db
-                        data.tracks.items.forEach(function(track) {
-                          newTrack.trackName = track.name;
-                          newTrack.artist = track.artists[0].name;
-                          newTrack.album = track.album.name;
-                          newTrack.icon = track.album.images[2].url;
-                          newTrack.trackId = track.uri.split(":")[2];
+                  CurrentPlaylist.tracks = [];
+                  CurrentPlaylist.thumbnails = [];
 
-                          db.track.create(newTrack)
-                            .success(function(track) {
-                              newWeather.addTrack(track);
-                              // this is hackey... I know
-                              if (imgArr.length < 14) {
-                                imgArr.push(track.icon);
-                              }
-                            });
+                  // make new track entries in db
+                  tracks.forEach(function(track) {
+                    newTrack.trackName = track.name;
+                    newTrack.artist = track.artists[0].name;
+                    newTrack.album = track.album.name;
+                    newTrack.icon = track.album.images[2].url;
+                    newTrack.trackId = track.id;
 
-                          // this is for the playbutton on the rendered page
-                          trackArr.push(track.uri.split(":")[2]);
-                        });
-                        tempImgData = imgArr;
-                        tempTrackData = helpers.scrambleArr(trackArr, 16).join(',');
-                        res.redirect('/results');
+                    db.track.create(newTrack).success(function(track) {
+                      newWeather.addTrack(track);
 
-                      } else {
-                        console.error("ERROR!", err);
-                      }
+                      if (CurrentPlaylist.thumbnails.length < 14) {
+                        CurrentPlaylist.thumbnails.push(track.icon);
+                      }                    
                     });
+
+                    CurrentPlaylist.tracks.push(track.id);
                   });
+                  CurrentPlaylist.tracks = CurrentPlaylist.tracks.join(',');
+                  res.redirect('/results');
                 });
               });
           });
-      } else {
-        res.redirect('/locationfail');
+        });
       }
-    } else {
-      console.error("Error!!!", err);
     }
   });
 });
+
 
 app.get('/results', function(req, res) {
   if (!req.user) {
     res.redirect('/');
   } else {
-
-    var description = tempData.data.current_condition[0].weatherDesc[0].value,
-      weatherIcon = tempData.data.current_condition[0].weatherIconUrl[0].value;
-
     res.render('results', 
-      {description: description, 
-        weatherIcon: weatherIcon,
-        playList: tempTrackData,
-        thumbnails: tempImgData,
-        weather: currentWeather,
+      {description: CurrentWeather.description, 
+        weatherIcon: CurrentWeather.icon,
+        playList: CurrentPlaylist.tracks,
+        thumbnails: CurrentPlaylist.thumbnails,
+        weather: CurrentWeather,
         home: 'home'});
   }
 });
 
+
 app.get('*', function(req, res) {
   res.render('404', {home : 'home'});
 });
+
 
 app.listen(process.env.PORT || 3000, function(){
   console.log("LISTENING ON PORT 3000");

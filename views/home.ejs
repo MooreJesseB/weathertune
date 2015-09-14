@@ -1,6 +1,13 @@
 <%  include partials/header.ejs %>
-
+  <br><br>
+  <% if (sessionFlash && sessionFlash.success) { %>
+    <div class="col-xs-3"></div>
+    <% sessionFlash.success.forEach(function(message) { %>
+      <div class="col-xs-6 alert alert-success text-center col-xs" role="alert"><%= message %></div>
+    <% }); %>
+  <% } %>
 <br><br><br>
+
 <h2 class="mont no_bold">Enter a location</h2><br>
 <form method="post" action="search">
   <div class="row">

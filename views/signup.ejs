@@ -1,5 +1,12 @@
 <%  include partials/header.ejs %>
-
+  <br>
+  <br>
+  <% if (sessionFlash && sessionFlash.failure) { %>
+    <div class="col-xs-3"></div>
+    <% sessionFlash.failure.forEach(function(message) { %>
+      <div class="col-xs-6 alert alert-danger text-center col-xs" role="alert"><%= message %></div>
+    <% }); %>
+  <% } %>
   <div class='container narrow'>
     <form class="form-signin" method="post" action="/create" role="form">
       <h2 class="mont form-signin-heading">Create a new account</h2><br>
